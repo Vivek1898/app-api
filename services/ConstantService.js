@@ -24,6 +24,7 @@ module.exports = {
         ERR_OOPS_SOMETHING_WENT_WRONG_IN_DELETE_JOB: "Oops! Something went wrong in deleting job",
         ERR_OOPS_SOMETHING_WENT_WRONG_IN_JOB_DETAILS: "Oops! Something went wrong in fetching job details",
         ERR_OOPS_SOMETHING_WENT_WRONG_IN_APPLIED_JOBS_DETAILS: "Oops! Something went wrong in fetching applied job details",
+        ERR_OOPS_SOMETHING_WENT_WRONG_IN_LIST_JOBS_FOR_USER: "Oops! Something went wrong in listing jobs for user",
 
         ERR_OOPS_SOMETHING_WENT_WRONG_IN_CREATING_CHATROOM: "Oops! Something went wrong in creating chatroom",
         ERR_OOPS_SOMETHING_WENT_WRONG_IN_ONBOARDING: "Oops! Something went wrong in onboarding",
