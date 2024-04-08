@@ -154,5 +154,24 @@ exports.getJobDetails = async (req, res) => {
 }
 
 
+exports.listJobsForUser = async (req, res) => {
+    try {
+        console.debug("============================ LIST JOBS FOR USER =============================")
+        const userId = req.payload.id;
+        const jobs = await Jobs.find({
+            postedBy: userId
+        });
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "Jobs fetched successfully",
+            data: jobs
+        });
+
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_LIST_JOBS_FOR_USER);
+    }
+}
+
+
 
 

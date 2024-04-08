@@ -15,6 +15,8 @@ router.get("/details/:id", auth, catchErrors(jobController.getJobDetails))
 
 router.post("/delete", auth, catchErrors(jobController.deleteJob));
 
+router.post("/list-user", auth, catchErrors(jobController.listJobsForUser));
+
 module.exports = router;
 
 
