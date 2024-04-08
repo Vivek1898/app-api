@@ -70,6 +70,7 @@ exports.applyJob = async (req, res) => {
         const appliedJob = new AppliedJobs({
             job: request.jobId,
             user: request.userId,
+            postedBy: job.postedBy,
         });
         await appliedJob.save();
 
@@ -146,4 +147,50 @@ exports.getAppliedJobDetails = async (req, res) => {
         return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_APPLIED_JOBS_DETAILS);
     }
 }
+
+
+exports.listAppliedJobsForPostedJob = async (req, res) => {
+    try {
+        console.debug("============  LIST APPLIED JOBS FOR POSTED JOB ============");
+      const request = {
+            postedBy: req.body.postedBy
+        };
+        console.log("REQUEST: ", request);
+        const schema = Joi.object({
+            postedBy: Joi.string().required(),
+        });
+        const {error} = schema.validate(request);
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+
+        const appliedJobs = await AppliedJobs.find({
+            postedBy: request.postedBy,
+        })
+            .populate("job")
+            .populate("user");
+
+
+        if (_.isEmpty(appliedJobs)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "No applied jobs found",
+            });
+        }
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "Applied jobs fetched successfully",
+            data: appliedJobs
+        });
+
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_LIST_JOBS_FOR_USER);
+    }
+
+}
+
+
+
 
