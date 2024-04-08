@@ -110,3 +110,56 @@ exports.Onboard = async (req, res) => {
 
     }
 }
+
+exports.accessTokenLoginUser = async (req, res) => {
+    try {
+        console.debug("============================ ACCESS TOKEN LOGIN USER =============================")
+        const request = {
+            userId: req.payload.id
+        }
+        console.log("REQUEST: ", request)
+        const schema = Joi.object({
+            userId: Joi.string().required(),
+        });
+
+        const {error} = schema.validate(request);
+
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+
+        const user = await User.findOne({
+            _id: request.userId
+        });
+
+        if (_.isEmpty(user)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User not found",
+            });
+        }
+
+        // if user is not onboarded
+
+        if (!user.isOnboarded) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User not onboarded",
+            });
+        }
+
+        user.password = undefined;
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "User fetched successfully",
+            data: user
+        });
+
+
+    } catch (e) {
+        console.log(e);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_ONBOARDING);
+
+    }
+
+}

@@ -19,7 +19,9 @@ exports.listAppliedJobs = async (req, res) => {
 
         const appliedJobs = await AppliedJobs.find({
             user: request.userId,
-        });
+        })
+            .populate("job")
+            .populate("user");
 
         if (_.isEmpty(appliedJobs)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
