@@ -193,6 +193,46 @@ exports.listAppliedJobsForPostedJob = async (req, res) => {
 
 }
 
+exports.listAllApplicantsForJob = async (req, res) => {
+    try {
+        console.debug("============  LIST ALL APPLICANTS FOR JOB ============");
+        const request = {
+            jobId: req.body.jobId
+        };
+        console.log("REQUEST: ", request);
+        const schema = Joi.object({
+            jobId: Joi.string().required(),
+        });
+        const {error} = schema.validate(request);
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+
+        const appliedJobs = await AppliedJobs.find({
+            job: request.jobId,
+        })
+            .populate("job")
+            .populate("user");
+
+        if (_.isEmpty(appliedJobs)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "No Applicants found for this job",
+            });
+        }
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "Applicants fetched successfully",
+            data: appliedJobs
+        });
+
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_LIST_JOBS_FOR_USER);
+    }
+}
+
 
 
 
