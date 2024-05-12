@@ -49,6 +49,7 @@ exports.postJob = async (req, res) => {
 
 exports.getJobs = async (req, res) => {
     try {
+        console.debug("============================ LIST JOBS =============================")
         const jobs = await Jobs.find();
         return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
             message: "Jobs fetched successfully",
@@ -171,7 +172,3 @@ exports.listJobsForUser = async (req, res) => {
         return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_LIST_JOBS_FOR_USER);
     }
 }
-
-
-
-
