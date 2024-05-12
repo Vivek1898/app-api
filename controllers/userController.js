@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-// const User = mongoose.model("User");
 const sha256 = require("js-sha256");
 const jwt = require("jwt-then");
 
@@ -10,6 +8,10 @@ exports.register = async (req, res) => {
 
     if (!emailRegex.test(email)) throw "Email is not supported from your domain.";
     if (password.length < 6) throw "Password must be atleast 6 characters long.";
+    // role can be user or employer
+    const validRoles = ["user", "employer"]
+
+    if (!validRoles.includes(role)) throw "Invalid role";
 
     const userExists = await User.findOne({
         email,
@@ -37,11 +39,17 @@ exports.login = async (req, res) => {
     const user = await User.findOne({
         email,
         password: sha256(password + process.env.SALT),
+
     });
 
     if (!user) throw "Email and Password did not match.";
 
-    const token = await jwt.sign({id: user.id}, process.env.SECRET);
+    // if(!user.isOnboarded) throw "User not onboarded";
+
+    const token = await jwt.sign({
+        id: user.id,
+        isOnboarded:user.isOnboarded
+    }, process.env.SECRET);
     user.password = undefined;
 
     res.status(200).json({
@@ -76,7 +84,7 @@ exports.Onboard = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({
+        let user = await User.findOne({
             _id: userId
         });
 
@@ -163,3 +171,60 @@ exports.accessTokenLoginUser = async (req, res) => {
     }
 
 }
+
+
+exports.getUsersForEmployer = async (req, res) => {
+    try {
+        console.debug("============================ LIST USERS FOR EMPLOYER =============================")
+        const users = await User.find({
+            role: "user",
+            isOnboarded: true
+        }).select('name email location bio profilePicture jobProfile education experience jobCategory');
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "Users fetched successfully",
+            data: users
+        });
+
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_LIST_USERS_FOR_EMPLOYER);
+    }
+};
+
+exports.getUsersDetails = async (req, res) => {
+    try {
+        console.debug("============================ GET USER DETAILS =============================")
+        const userId = req.body.userId;
+        console.log("REQUEST: ", req.body);
+        const schema = Joi.object({
+            userId: Joi.string().required(),
+        });
+
+        const {error} = schema.validate(req.body);
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+            const user = await User.findOne({
+                _id: userId,
+                isOnboarded: true
+            }).select('name email location bio profilePicture jobProfile education experience jobCategory');
+
+
+        if (_.isEmpty(user)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User not found",
+            });
+        }
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "User details fetched successfully",
+            data: user
+        });
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_USER_DETAILS);
+    }
+
+}
+
