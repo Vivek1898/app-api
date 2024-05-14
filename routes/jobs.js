@@ -17,6 +17,14 @@ router.post("/delete", auth, catchErrors(jobController.deleteJob));
 
 router.post("/list-user", auth, catchErrors(jobController.listJobsForUser));
 
+router.post("/swipe", auth, catchErrors(jobController.onJobSwipe));
+
+router.post("/list/recommended", auth, catchErrors(jobController.listRecommended));
+
+
+
+
+
 module.exports = router;
 
 

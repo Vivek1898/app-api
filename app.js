@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const app = express();
 const ConstantService = require("./services/ConstantService");
 const ResponseService = require("./services/ResponseService");
+const SwipeService = require("./services/SwipeService");
 const _ = require("lodash");
 const Joi = require("joi");
 
@@ -20,6 +21,7 @@ app.use(bodyParser.json());
 // Global Services
 global.ResponseService = ResponseService;
 global.ConstantService = ConstantService;
+global.SwipeService = SwipeService;
 
 //global Models
 global.User = require("./models/User");
