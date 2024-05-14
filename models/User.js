@@ -43,6 +43,16 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        swipedJobs: {
+            left: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Job'
+            }],
+            right: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Job'
+            }]
+        }
     },
     {
         timestamps: true,

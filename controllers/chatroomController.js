@@ -119,3 +119,39 @@ exports.createRoomForTwoUsers = async (req, res) => {
 
 
 }
+
+exports.getChatRoomDetails = async (req, res) => {
+    try {
+        const chatRoomId = req.body.chatRoomId;
+
+        const schema = Joi.object({
+            chatRoomId: Joi.string().required(),
+        });
+
+        const {error} = schema.validate(req.body);
+
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+
+        const chatroom = await Chatroom.findOne({
+            _id: chatRoomId
+        }).populate("userOne").populate("userTwo");
+
+        if (_.isEmpty(chatroom)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "Chatroom not found",
+            });
+        }
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "Chatroom details fetched successfully",
+            data: chatroom
+        });
+    } catch (e) {
+        console.error(e);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_FETCHING_CHATROOM_DETAILS);
+    }
+}
