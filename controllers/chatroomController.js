@@ -136,9 +136,9 @@ exports.getChatRoomDetails = async (req, res) => {
             });
         }
 
-        const chatroom = await Chatroom.findOne({
-            _id: chatRoomId
-        }).populate("userOne").populate("userTwo");
+        const chatroom = await Chatroom.findOne({ _id: chatRoomId })
+            .populate({ path: 'userOne', select: 'name email location bio profilePicture jobProfile education experience jobCategory' })
+            .populate({ path: 'userTwo', select: 'name email location bio profilePicture jobProfile education experience jobCategory' });
 
         if (_.isEmpty(chatroom)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
