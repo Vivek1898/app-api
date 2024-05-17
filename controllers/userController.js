@@ -229,3 +229,39 @@ exports.getUsersDetails = async (req, res) => {
 
 }
 
+exports.isUserOnboarded = async (req, res) => {
+    try {
+        console.debug("============================ IS USER ONBOARDED =============================")
+        const userId = req.body.userId;
+        console.log("REQUEST: ", req.body);
+        const schema = Joi.object({
+            userId: Joi.string().required(),
+        });
+
+        const {error} = schema.validate(req.body);
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+        const user = await User.findOne({
+            _id: userId
+        });
+
+        if (_.isEmpty(user)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User not found",
+            });
+        }
+
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "User details fetched successfully",
+            data: user.isOnboarded
+        });
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_USER_DETAILS);
+    }
+}
+

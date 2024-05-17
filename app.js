@@ -42,6 +42,7 @@ app.use("/user", require("./routes/user"));
 app.use("/chatroom", require("./routes/chatroom"));
 app.use("/jobs", require("./routes/jobs"));
 app.use("/applied/jobs", require("./routes/appliedJobs"));
+app.use("/meet", require("./routes/meet"));
 
 
 
