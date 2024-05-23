@@ -21,6 +21,11 @@ const appliedJobsSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         },
+        appliedByRole: {
+            type: String,
+            default: "user",
+            required: "Role is required!",
+        },
     },
     {
         timestamps: true,
