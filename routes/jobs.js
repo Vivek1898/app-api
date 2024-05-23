@@ -22,9 +22,9 @@ router.post("/swipe", auth, isUser, catchErrors(jobController.onJobSwipe));
 
 router.post("/list/recommended", auth, isUser, catchErrors(jobController.listRecommended));
 
-router.post("/list/recommended/employer", auth, catchErrors(jobController.listRecommendedUsersForEmployer));
+router.post("/list/recommended/employer", auth, isEmployer,catchErrors(jobController.listRecommendedUsersForEmployer));
 
-router.post("/swipe/employer", auth, catchErrors(jobController.onEmployerSwipe));
+router.post("/swipe/employer", auth, isEmployer ,  catchErrors(jobController.onEmployerSwipe));
 
 
 module.exports = router;
