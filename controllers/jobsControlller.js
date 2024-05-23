@@ -237,6 +237,62 @@ exports.onJobSwipe = async (req, res) => {
         console.error(err);
         return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_SWIPE_LEFT_JOB);
     }
+};
+
+
+exports.onEmployerSwipe = async (req, res) => {
+    try {
+        console.debug("============================ SWIPE EMPLOYER =============================")
+        const request = {
+            userId: req.body.userId,
+            swipe: req.body.swipe,
+            employerId: req.payload.id,
+        }
+
+        const schema = Joi.object({
+            userId: Joi.string().required(),
+            swipe: Joi.string().required().valid("left", "right"),
+            employerId: Joi.string().required(),
+        });
+
+        const {error} = schema.validate(request);
+
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+
+        const employer = await User.findOne({
+            _id: request.employerId
+        });
+
+        if (_.isEmpty(employer)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "employer not found",
+            });
+        }
+
+        switch (request.swipe) {
+            case "left":
+                SwipeService.onEmployerSwipeLeft(employer, request.userId);
+                break;
+            case "right":
+                SwipeService.onEmployerSwipeRight(employer, request.userId);
+                break;
+            default:
+                console.log("Invalid swipe");
+        }
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "Employer swiped successfully",
+        });
+
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_SWIPE_LEFT_EMPLOYER);
+    }
+
 }
 
 exports.listRecommended = async (req, res) => {
@@ -278,10 +334,10 @@ exports.listRecommended = async (req, res) => {
             });
         }
 
-
         const user = await User.findOne({
-            _id: userId
-        });
+            _id: userId,
+            isOnboarded: true
+        }).select("-password");
 
         if (_.isEmpty(user)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
@@ -293,7 +349,8 @@ exports.listRecommended = async (req, res) => {
         const swipedRightJobs = user.swipedJobs.right;
 
         let query = {
-            _id: {$nin: [...swipedLeftJobs, ...swipedRightJobs]}
+            _id: {$nin: [...swipedLeftJobs, ...swipedRightJobs]},
+            isOnboarded: true
         };
 
         if (location) query.location = location;
@@ -321,6 +378,93 @@ exports.listRecommended = async (req, res) => {
     } catch (err) {
         console.error(err);
         return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_SWIPE_RIGHT_JOB);
+    }
+}
+
+
+exports.listRecommendedUsersForEmployer = async (req, res) => {
+    try {
+        console.debug("============================ RECOMMENDED USERS FOR EMPLOYER =============================")
+        const {
+            skip = 0,
+            limit = 10,
+            location = "",
+            jobCategory = "",
+            jobType = "",
+            experience = "",
+            qualification = ""
+        } = req.body;
+
+        const userId = req.payload.id;
+
+        console.log("REQUEST: ", req.body);
+        const request = {
+            ...req.body,
+            userId
+        }
+
+
+        const schema = Joi.object({
+            skip: Joi.number().allow(0),
+            limit: Joi.number().allow(0),
+            location: Joi.string().allow(""),
+            jobCategory: Joi.string().allow(""),
+            jobType: Joi.string().allow(""),
+            experience: Joi.string().allow(""),
+            qualification: Joi.string().allow(""),
+            userId: Joi.string().required(),
+        });
+
+        const {error} = schema.validate(request);
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+
+        const user = await User.findOne({
+            _id: userId
+
+        }).select("-password");
+
+        if (_.isEmpty(user)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User not found",
+            });
+        }
+
+        const swipedLeftUsers = user.swipedUsers.left;
+        const swipedRightUsers = user.swipedUsers.right;
+
+
+        let query = {
+            _id: {$nin: [...swipedLeftUsers, ...swipedRightUsers]},
+            isOnboarded: true
+        };
+
+        if (location) query.location = location;
+        if (jobCategory) query.jobCategory = jobCategory;
+
+        // Query users with pagination and filtering
+        const users = await User.find(query)
+            .select("-password -swipedJobs -swipedUsers")
+            .skip(parseInt(request.skip))
+            .limit(parseInt(request.limit))
+            .exec();
+
+        const totalUsers = await User.countDocuments(query).exec();
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "Recommended users fetched successfully",
+            data: {
+                users,
+                totalUsers
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_RECOMMENDED_USERS);
     }
 }
 

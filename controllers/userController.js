@@ -2,7 +2,7 @@ const sha256 = require("js-sha256");
 const jwt = require("jwt-then");
 
 exports.register = async (req, res) => {
-    const {name, email, password, role} = req.body;
+    let {name, email, password, role} = req.body;
 
     const emailRegex = /@gmail.com|@yahoo.com|@hotmail.com|@live.com/;
 
@@ -19,9 +19,10 @@ exports.register = async (req, res) => {
 
     if (userExists) throw "User with same email already exits.";
 
+
     const user = new User({
         name,
-        email,
+        email: email.toString().toLowerCase(),
         password: sha256(password + process.env.SALT),
         role: role || "user"
     });
@@ -44,11 +45,12 @@ exports.login = async (req, res) => {
 
     if (!user) throw "Email and Password did not match.";
 
-    // if(!user.isOnboarded) throw "User not onboarded";
+    if(!user.isOnboarded) throw "User not onboarded";
 
     const token = await jwt.sign({
         id: user.id,
-        isOnboarded:user.isOnboarded
+        role: user.role,
+        email: user.email,
     }, process.env.SECRET);
     user.password = undefined;
 
@@ -65,8 +67,8 @@ exports.login = async (req, res) => {
 
 exports.Onboard = async (req, res) => {
     try {
-        const {location, bio, profilePicture, jobProfile, education, experience, jobCategory} = req.body;
-        const userId = req.payload.id;
+        const {location, bio, profilePicture, jobProfile, education, experience, jobCategory ,userId} = req.body;
+        // const userId = req.payload.id;
 
         const schema = Joi.object({
             location: Joi.string().required(),
@@ -76,6 +78,7 @@ exports.Onboard = async (req, res) => {
             education: Joi.string().required(),
             experience: Joi.string().required(),
             jobCategory: Joi.string().required(),
+            userId: Joi.string().required(),
         });
 
         const {error} = schema.validate(req.body);
@@ -87,13 +90,21 @@ exports.Onboard = async (req, res) => {
 
         let user = await User.findOne({
             _id: userId
-        });
+        }).select('name email location bio profilePicture jobProfile education experience jobCategory isOnboarded role')
+        ;
 
         if (_.isEmpty(user)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
                 message: "User not found",
             });
         }
+
+        if(user.isOnboarded) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User already onboarded",
+            });
+        }
+
 
         user.location = location;
         user.bio = bio;
@@ -108,9 +119,19 @@ exports.Onboard = async (req, res) => {
         await user.save();
         user.password = undefined;
 
+        // Generate access token
+        const token = await jwt.sign({
+            id: user.id,
+            role: user.role,
+            email: user.email,
+        }, process.env.SECRET);
+
         return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
             message: "User onboarded successfully",
-            data: user
+            data: {
+                user:user,
+                token: token
+            }
         });
 
     } catch (e) {
@@ -141,7 +162,7 @@ exports.accessTokenLoginUser = async (req, res) => {
 
         const user = await User.findOne({
             _id: request.userId
-        });
+        }).select('name email location bio profilePicture jobProfile education experience jobCategory isOnboarded role');
 
         if (_.isEmpty(user)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
@@ -232,10 +253,10 @@ exports.getUsersDetails = async (req, res) => {
 exports.isUserOnboarded = async (req, res) => {
     try {
         console.debug("============================ IS USER ONBOARDED =============================")
-        const userId = req.body.userId;
+        const email = req.body.email;
         console.log("REQUEST: ", req.body);
         const schema = Joi.object({
-            userId: Joi.string().required(),
+            email: Joi.string().required(),
         });
 
         const {error} = schema.validate(req.body);
@@ -245,7 +266,7 @@ exports.isUserOnboarded = async (req, res) => {
             });
         }
         const user = await User.findOne({
-            _id: userId
+            email: email.toString().toLowerCase()
         });
 
         if (_.isEmpty(user)) {
@@ -257,7 +278,11 @@ exports.isUserOnboarded = async (req, res) => {
 
         return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
             message: "User details fetched successfully",
-            data: user.isOnboarded
+            data: {
+                userId:user._id,
+                isOnboarded: user.isOnboarded,
+                email: user.email
+            }
         });
     } catch (err) {
         console.error(err);

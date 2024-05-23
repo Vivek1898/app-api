@@ -12,4 +12,18 @@ module.exports = {
             await user.save();
         }
     },
+
+    onEmployerSwipeLeft: async (user,userId) => {
+        if (!user.swipedUsers.left.includes(userId)) {
+            user.swipedUsers.left.push(userId);
+            await user.save();
+        }
+    },
+
+    onEmployerSwipeRight: async (user,userId) => {
+        if (!user.swipedUsers.right.includes(userId)) {
+            user.swipedUsers.right.push(userId);
+            await user.save();
+        }
+    }
 }
