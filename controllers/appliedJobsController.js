@@ -21,7 +21,10 @@ exports.listAppliedJobs = async (req, res) => {
             user: request.userId,
         })
             .populate("job")
-            .populate("user");
+            .populate({
+                path: 'user',
+                select: '-password -swipedJobs -swipedUsers'
+            });
 
         if (_.isEmpty(appliedJobs)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
@@ -132,7 +135,10 @@ exports.getAppliedJobDetails = async (req, res) => {
         console.log("REQUEST: ", req.params);
         const appliedJob = await AppliedJobs.findOne({
             _id: appliedJobId
-        }).populate("job").populate("user");
+        }).populate("job") .populate({
+            path: 'user',
+            select: '-password -swipedJobs -swipedUsers'
+        });
 
         if (_.isEmpty(appliedJob)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
@@ -172,7 +178,10 @@ exports.listAppliedJobsForPostedJob = async (req, res) => {
             postedBy: request.postedBy,
         })
             .populate("job")
-            .populate("user");
+            .populate({
+                path: 'user',
+                select: '-password -swipedJobs -swipedUsers'
+            });
 
 
         if (_.isEmpty(appliedJobs)) {
@@ -214,7 +223,10 @@ exports.listAllApplicantsForJob = async (req, res) => {
             job: request.jobId,
         })
             .populate("job")
-            .populate("user");
+            .populate({
+                path: 'user',
+                select: '-password -swipedJobs -swipedUsers'
+            });
 
         if (_.isEmpty(appliedJobs)) {
             return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {

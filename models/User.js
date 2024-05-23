@@ -52,7 +52,17 @@ const userSchema = new mongoose.Schema(
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'Job'
             }]
-        }
+        },
+        swipedUsers: {
+            left: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            }],
+            right: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            }]
+        },
     },
     {
         timestamps: true,
