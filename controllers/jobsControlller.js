@@ -350,7 +350,6 @@ exports.listRecommended = async (req, res) => {
 
         let query = {
             _id: {$nin: [...swipedLeftJobs, ...swipedRightJobs]},
-            isOnboarded: true
         };
 
         if (location) query.location = location;
