@@ -16,7 +16,7 @@ router.get("/details/:id", auth, catchErrors(jobController.getJobDetails))
 
 router.post("/delete", auth, isEmployer, catchErrors(jobController.deleteJob));
 
-router.post("/list-user", auth, isUser, catchErrors(jobController.listJobsForUser));
+router.post("/list-user", auth, isEmployer, catchErrors(jobController.listJobsForUser));
 
 router.post("/swipe", auth, isUser, catchErrors(jobController.onJobSwipe));
 
