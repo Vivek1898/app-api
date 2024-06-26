@@ -194,7 +194,6 @@ exports.accessTokenLoginUser = async (req, res) => {
 
 }
 
-
 exports.getUsersForEmployer = async (req, res) => {
     try {
         console.debug("============================ LIST USERS FOR EMPLOYER =============================")
@@ -290,3 +289,69 @@ exports.isUserOnboarded = async (req, res) => {
     }
 }
 
+exports.updateUser = async (req, res) => {
+    try {
+        console.debug("============================ UPDATE USER =============================")
+        const { location, bio, profilePicture, jobProfile, education, experience, jobCategory , name , email } = req.body;
+        console.log("REQUEST: ", req.body)
+        const userId = req.payload.id;
+
+
+        const schema = Joi.object({
+            location: Joi.string().optional(),
+            name: Joi.string().optional(),
+            email: Joi.string().optional(),
+            bio: Joi.string().optional(),
+            profilePicture: Joi.string().optional(),
+            jobProfile: Joi.string().optional(),
+            education: Joi.string().optional(),
+            experience: Joi.string().optional(),
+            jobCategory: Joi.string().optional(),
+            userId: Joi.string().required(),
+        });
+
+        const { error } = schema.validate(req.body);
+        if (error) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: error.message,
+            });
+        }
+
+        let user = await User.findOne({ _id: userId }).select('name email location bio profilePicture jobProfile education experience jobCategory isOnboarded role');
+
+        if (_.isEmpty(user)) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User not found",
+            });
+        }
+
+        if (!user.isOnboarded) {
+            return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                message: "User not onboarded",
+            });
+        }
+
+        // Update only the provided fields
+        if (location) user.location = location;
+        if(name) user.name = name;
+        if (bio) user.bio = bio;
+        if (email) user.email = email;
+        if (profilePicture) user.profilePicture = profilePicture;
+        if (jobProfile) user.jobProfile = jobProfile;
+        if (education) user.education = education;
+        if (experience) user.experience = experience;
+        if (jobCategory) user.jobCategory = jobCategory;
+
+        await user.save();
+        user.password = undefined;
+
+        return ResponseService.jsonResponse(res, ConstantService.responseCode.SUCCESS, {
+            message: "User updated successfully",
+            data: user
+        });
+
+    } catch (e) {
+        console.log(e);
+        return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.ERR_OOPS_SOMETHING_WENT_WRONG_IN_ONBOARDING);
+    }
+}
