@@ -11,6 +11,9 @@ router.post("/onboard/verify", catchErrors(userController.isUserOnboarded));
 router.get("/accessTokenLogin",auth, catchErrors(userController.accessTokenLoginUser));
 router.post("/employer/list",auth, isEmployer, catchErrors(userController.getUsersForEmployer));
 router.post("/details",auth, catchErrors(userController.getUsersDetails));
+router.put("/update",auth, catchErrors(userController.updateUser));
+
+
 
 
 module.exports = router;
